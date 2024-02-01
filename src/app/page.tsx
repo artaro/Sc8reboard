@@ -1,113 +1,385 @@
-import Image from "next/image";
-
+"use client";
+import React, { useState } from "react";
+import {
+  Avatar,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 export default function Home() {
+  const [firstPlayerData, setFirstPlayerData] = useState({
+    name: "Player 1",
+    score: 12,
+  });
+  const [firstPlayerHistory, setFirstPlayerHistory] = useState<string[]>([]);
+
+  const [secondPlayerData, setSecondPlayerData] = useState({
+    name: "Player 2",
+    score: 5,
+  });
+  const [secondPlayerHistory, setSecondPlayerHistory] = useState<string[]>([]);
+
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+
+  const [openEndFrameDialog, setOpenEndFrameDialog] = useState(false);
+
+  //functions
+  function stringToColor(string: string) {
+    let hash = 0;
+    let i;
+
+    /* eslint-disable no-bitwise */
+    for (i = 0; i < string.length; i += 1) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let color = "#";
+
+    for (i = 0; i < 3; i += 1) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += `00${value.toString(16)}`.slice(-2);
+    }
+    /* eslint-enable no-bitwise */
+
+    return color;
+  }
+
+  function stringAvatar(name: string) {
+    return {
+      sx: {
+        bgcolor: stringToColor(name),
+      },
+      children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
+    };
+  }
+
+  function getBallColor(value: number) {
+    const colors: { [key: number]: string } = {
+      1: "#ff0000", // Red
+      2: "#ffff00", // Yellow
+      3: "#008000", // Green
+      4: "#a52a2a", // Brown
+      5: "#0000ff", // Blue
+      6: "#ffc0cb", // Pink
+      7: "#000000", // Black
+    };
+
+    return colors[value] || "#ffffff";
+  }
+
+  function handlePlayerSelection(player: string) {
+    if (selectedPlayer === player) {
+      // If the same player is clicked again, clear the selection
+      setSelectedPlayer(null);
+    } else {
+      setSelectedPlayer(player);
+    }
+  }
+
+  function handleScoreChange(value: number) {
+    // if (selectedPlayer === "player1") {
+    //   setFirstPlayerData({
+    //     ...firstPlayerData,
+    //     score: firstPlayerData.score + value,
+    //   });
+    //   setFirstPlayerHistory([...firstPlayerHistory, `+${value}`]);
+    // } else if (selectedPlayer === "player2") {
+    //   setSecondPlayerData({
+    //     ...secondPlayerData,
+    //     score: secondPlayerData.score + value,
+    //   });
+    //   setSecondPlayerHistory([...secondPlayerHistory, `+${value}`]);
+    // }
+    if (selectedPlayer) {
+      if (selectedPlayer === firstPlayerData.name) {
+        setFirstPlayerData({
+          ...firstPlayerData,
+          score: firstPlayerData.score + value,
+        });
+        setFirstPlayerHistory([...firstPlayerHistory, `+${value}`]);
+      } else {
+        setSecondPlayerData({
+          ...secondPlayerData,
+          score: secondPlayerData.score + value,
+        });
+        setSecondPlayerHistory([...secondPlayerHistory, `+${value}`]);
+      }
+    }
+    setSelectedPlayer(null);
+  }
+
+  function handleFoul() {
+    if (selectedPlayer) {
+      if (selectedPlayer === firstPlayerData.name) {
+        setFirstPlayerData({
+          ...firstPlayerData,
+          score: firstPlayerData.score - 4,
+        });
+        setFirstPlayerHistory([...firstPlayerHistory, `-4`]);
+      } else {
+        setSecondPlayerData({
+          ...secondPlayerData,
+          score: secondPlayerData.score - 4,
+        });
+        setSecondPlayerHistory([...secondPlayerHistory, `-4`]);
+      }
+    }
+    setSelectedPlayer(null);
+  }
+
+  const handleOpenEndFrameDialog = () => {
+    setOpenEndFrameDialog(true);
+  };
+
+  const handleConfirmEndFrame = () => {
+    // Resetting all the states
+    setFirstPlayerData({ name: firstPlayerData.name, score: 0 });
+    setSecondPlayerData({ name: secondPlayerData.name, score: 0 });
+    setFirstPlayerHistory([]);
+    setSecondPlayerHistory([]);
+    setSelectedPlayer(null);
+    setOpenEndFrameDialog(false);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <Stack direction="column" spacing={2} p={5}>
+      <Grid container spacing={2}>
+        {/* Player 1 Section */}
+        <Grid
+          item
+          xs={6}
+          sx={{
+            border: "1px solid #000",
+            borderRadius: "10px",
+            borderTopRightRadius: "0",
+            borderBottomRightRadius: "0",
+            padding: "1rem",
+            backgroundColor:
+              selectedPlayer === firstPlayerData.name ? "gray" : "white",
+            cursor: "pointer",
+          }}
+          onClick={() => handlePlayerSelection(firstPlayerData.name)}
+        >
+          <Stack alignItems="center" spacing={1}>
+            <Avatar
+              {...stringAvatar(firstPlayerData.name)}
+              sx={{
+                width: 100,
+                height: 100,
+                border:
+                  selectedPlayer === firstPlayerData.name
+                    ? "4px solid #000"
+                    : "",
+              }}
             />
-          </a>
-        </div>
-      </div>
+            <Typography variant="h5" fontWeight="bold">
+              {firstPlayerData.name}
+            </Typography>
+            <Typography fontWeight="bold" sx={{ fontSize: "6rem" }}>
+              {firstPlayerData.score}
+            </Typography>
+            <Typography variant="h6">{firstPlayerData.name} History</Typography>
+            <Grid
+              container
+              spacing={1}
+              sx={{
+                minWidth: "4rem",
+                minHeight: "6rem",
+                border: "1px solid #000",
+                borderRadius: "10px",
+              }}
+            >
+              {firstPlayerHistory.map((action, index) => (
+                <Grid item xs={3} key={index}>
+                  <Box
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor:
+                        action.charAt(0) === "+"
+                          ? getBallColor(parseInt(action.charAt(1)))
+                          : "orange",
+                      color: "#fff",
+                      textAlign: "center",
+                      borderRadius: "50%",
+                    }}
+                  >
+                    <Typography>{action}</Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </Grid>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+        {/* Player 2 Section */}
+        <Grid
+          item
+          xs={6}
+          sx={{
+            border: "1px solid #000",
+            borderRadius: "10px",
+            borderTopLeftRadius: "0",
+            borderBottomLeftRadius: "0",
+            padding: "1rem",
+            backgroundColor:
+              selectedPlayer === secondPlayerData.name ? "gray" : "white",
+            cursor: "pointer",
+          }}
+          onClick={() => handlePlayerSelection(secondPlayerData.name)}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Stack alignItems="center" spacing={1}>
+            <Avatar
+              {...stringAvatar(secondPlayerData.name)}
+              sx={{
+                width: 100,
+                height: 100,
+                border:
+                  selectedPlayer === secondPlayerData.name
+                    ? "4px solid #000"
+                    : "",
+              }}
+            />
+            <Typography variant="h5" fontWeight="bold">
+              {secondPlayerData.name}
+            </Typography>
+            <Typography fontWeight="bold" sx={{ fontSize: "6rem" }}>
+              {secondPlayerData.score}
+            </Typography>
+            <Typography variant="h6">
+              {secondPlayerData.name} History
+            </Typography>
+            <Grid
+              container
+              spacing={1}
+              sx={{
+                minWidth: "4rem",
+                minHeight: "6rem",
+                border: "1px solid #000",
+                borderRadius: "10px",
+              }}
+            >
+              {secondPlayerHistory.map((action, index) => (
+                <Grid item xs={3} key={index}>
+                  <Box
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor:
+                        action.charAt(0) === "+"
+                          ? getBallColor(parseInt(action.charAt(1)))
+                          : "orange",
+                      color: "#fff",
+                      textAlign: "center",
+                      borderRadius: "50%",
+                    }}
+                  >
+                    <Typography>{action}</Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        {[1, 2, 3, 4, 5, 6, 7].map((value) => (
+          <Grid item xs={3} key={value}>
+            <Avatar
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: "50%",
+                backgroundColor: getBallColor(value),
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
+                margin: "0 auto",
+                cursor: "pointer",
+              }}
+              onClick={() => handleScoreChange(value)}
+            >
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+              >
+                <Typography fontWeight="bold" sx={{ fontSize: "1.5rem" }}>
+                  {value}
+                </Typography>
+              </Box>
+            </Avatar>
+          </Grid>
+        ))}
+        {/* Foul Ball */}
+        <Grid item xs={3}>
+          <Avatar
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: "50%",
+              backgroundColor: "orange",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
+              margin: "0 auto",
+              cursor: "pointer",
+            }}
+            onClick={handleFoul}
+          >
+            <Typography
+              fontWeight="bold"
+              sx={{ fontSize: "1.5rem", color: "white" }}
+            >
+              Foul
+            </Typography>
+          </Avatar>
+        </Grid>
+        <Button
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          onClick={handleOpenEndFrameDialog}
+          sx={{ marginTop: "2rem" }}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+          End Frame
+        </Button>
+      </Grid>
+      <Dialog
+        open={openEndFrameDialog}
+        onClose={() => setOpenEndFrameDialog(false)}
+        aria-labelledby="end-frame-dialog-title"
+      >
+        <DialogTitle id="end-frame-dialog-title">Confirm End Frame</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            เมื่อกดปุ่ม "ตกลง" จะสิ้นสุด frame นี้ และรีเซ็ตค่าทั้งหมด
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEndFrameDialog(false)}>ยกเลิก</Button>
+          <Button onClick={handleConfirmEndFrame} autoFocus>
+            ตกลง
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Stack>
   );
 }
