@@ -370,7 +370,7 @@ export default function Home() {
         <DialogTitle id="end-frame-dialog-title">Confirm End Frame</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            เมื่อกดปุ่ม ตกลง จะสิ้นสุด frame นี้ และรีเซ็ตค่าทั้งหมด
+            เมื่อกดปุ่มตกลงจะสิ้นสุด frame นี้ และรีเซ็ตค่าทั้งหมด
           </DialogContentText>
         </DialogContent>
         <DialogActions>
