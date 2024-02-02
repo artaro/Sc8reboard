@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Avatar,
   Box,
@@ -12,6 +12,7 @@ import {
   Divider,
   Grid,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 export default function Home() {
@@ -31,29 +32,64 @@ export default function Home() {
 
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 
+  const [isEditingFirstPlayer, setIsEditingFirstPlayer] = useState(false);
+  const [isEditingSecondPlayer, setIsEditingSecondPlayer] = useState(false);
+
   const [openEndFrameDialog, setOpenEndFrameDialog] = useState(false);
   const [isClient, setIsClient] = useState(false);
+
+  let pressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const longPressTriggeredRef = useRef(false);
+  const firstPlayerInputRef = useRef<HTMLInputElement>(null);
+  const secondPlayerInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     // This effect runs once on component mount, i.e., on the client side
     setIsClient(true); // Set isClient to true to indicate client-side rendering
 
     const firstPlayerDataSaved = localStorage.getItem("firstPlayerData");
-    const firstPlayerHistorySaved = localStorage.getItem("firstPlayerHistory");
-    if (firstPlayerDataSaved && firstPlayerHistorySaved) {
+
+    console.log("🚀 🔸 firstPlayerDataSaved:", firstPlayerDataSaved);
+    if (firstPlayerDataSaved) {
       setFirstPlayerData(JSON.parse(firstPlayerDataSaved));
+    }
+
+    const secondPlayerDataSaved = localStorage.getItem("secondPlayerData");
+    if (secondPlayerDataSaved) {
+      setSecondPlayerData(JSON.parse(secondPlayerDataSaved));
+    }
+
+    // Retrieving player histories
+    const firstPlayerHistorySaved = localStorage.getItem("firstPlayerHistory");
+    if (firstPlayerHistorySaved) {
       setFirstPlayerHistory(JSON.parse(firstPlayerHistorySaved));
     }
 
-    // Repeat for other states needing localStorage data
-    const secondPlayerDataSaved = localStorage.getItem("secondPlayerData");
     const secondPlayerHistorySaved = localStorage.getItem(
       "secondPlayerHistory"
     );
-    if (secondPlayerDataSaved && secondPlayerHistorySaved) {
-      setSecondPlayerData(JSON.parse(secondPlayerDataSaved));
+    if (secondPlayerHistorySaved) {
       setSecondPlayerHistory(JSON.parse(secondPlayerHistorySaved));
     }
   }, []);
+
+  useEffect(() => {
+    // When component unmounts, clear the timeout to prevent memory leaks
+    return () => {
+      if (pressTimer.current) {
+        clearTimeout(pressTimer.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isEditingFirstPlayer) {
+      firstPlayerInputRef.current?.focus();
+    } else if (isEditingSecondPlayer) {
+      secondPlayerInputRef.current?.focus();
+    }
+  }, [isEditingFirstPlayer, isEditingSecondPlayer]);
 
   if (!isClient) {
     // Optionally, return null or a loading state until client-side updates complete
@@ -66,20 +102,36 @@ export default function Home() {
       1: "#ea3a3a", // Red
       2: "#d0b13e", // Yellow
       3: "#196f3d", // Green
-      4: "#c76360", // Brown
+      4: "#994D1C", // Brown
       5: "#4758d6", // Blue
       6: "#db9ca9", // Pink
       7: "#292a2a", // Black
     };
 
-    return colors[value] || "#e1811f";
+    return colors[value] || "#ffffff";
   }
 
+  const handleLongPressStart = (playerName: string) => {
+    longPressTriggeredRef.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      if (playerName === firstPlayerData.name) {
+        setIsEditingFirstPlayer(true);
+      } else {
+        setIsEditingSecondPlayer(true);
+      }
+    }, 1000); // 1 second delay
+  };
+
+  const handleLongPressEnd = () => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+    }
+  };
+
   function handlePlayerSelection(player: string) {
-    if (selectedPlayer === player) {
-      // If the same player is clicked again, clear the selection
-      setSelectedPlayer(null);
-    } else {
+    if (!longPressTriggeredRef.current) {
+      // Only proceed if it was not a long press
       setSelectedPlayer(player);
     }
   }
@@ -170,10 +222,16 @@ export default function Home() {
     // Resetting all the states
 
     // reset local storage
-    localStorage.removeItem("firstPlayerData");
-    localStorage.removeItem("firstPlayerHistory");
-    localStorage.removeItem("secondPlayerData");
-    localStorage.removeItem("secondPlayerHistory");
+    localStorage.setItem(
+      "firstPlayerData",
+      JSON.stringify({ ...firstPlayerData, score: 0 })
+    );
+    localStorage.setItem(
+      "secondPlayerData",
+      JSON.stringify({ ...secondPlayerData, score: 0 })
+    );
+    localStorage.setItem("firstPlayerHistory", JSON.stringify([]));
+    localStorage.setItem("secondPlayerHistory", JSON.stringify([]));
 
     setFirstPlayerData({ name: firstPlayerData.name, score: 0 });
     setSecondPlayerData({ name: secondPlayerData.name, score: 0 });
@@ -192,7 +250,7 @@ export default function Home() {
         width: "100vw",
         height: "100vh",
         overflow: "auto",
-        padding: 4,
+        padding: 3,
         boxSizing: "border-box",
       }}
     >
@@ -208,6 +266,11 @@ export default function Home() {
         <Grid
           item
           xs={6}
+          onMouseDown={() => handleLongPressStart(firstPlayerData.name)}
+          onMouseUp={handleLongPressEnd}
+          onMouseLeave={handleLongPressEnd} // To handle cases where the mouse leaves the element before releasing
+          onTouchStart={() => handleLongPressStart(firstPlayerData.name)}
+          onTouchEnd={handleLongPressEnd}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -234,9 +297,52 @@ export default function Home() {
                 cursor: "pointer",
               }}
             />
-            <Typography variant="h6" fontWeight="bold">
-              {firstPlayerData.name}
-            </Typography>
+            <TextField
+              inputRef={firstPlayerInputRef}
+              disabled={!isEditingFirstPlayer}
+              onBlur={() => {
+                setIsEditingFirstPlayer(false);
+                // save to local storage
+                localStorage.setItem(
+                  "firstPlayerData",
+                  JSON.stringify(firstPlayerData)
+                );
+              }}
+              value={firstPlayerData.name}
+              onChange={(e) =>
+                setFirstPlayerData({ ...firstPlayerData, name: e.target.value })
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setIsEditingFirstPlayer(false);
+                  // save to local storage
+                  localStorage.setItem(
+                    "firstPlayerData",
+                    JSON.stringify(firstPlayerData)
+                  );
+                }
+              }}
+              variant="standard"
+              InputProps={{
+                disableUnderline: true,
+                sx: {
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  "& input": {
+                    textAlign: "center",
+                  },
+                },
+              }}
+              sx={{
+                width: "fit-content",
+                "& .MuiInput-root:before, & .MuiInput-root:after": {
+                  display: "none",
+                },
+                "& .MuiInput-root:hover:not(.Mui-disabled):before": {
+                  borderBottom: "none",
+                },
+              }}
+            />
             <Typography
               fontWeight="bold"
               sx={{ fontSize: "5rem", color: "#4758d6" }}
@@ -251,6 +357,7 @@ export default function Home() {
               container
               sx={{
                 display: "flex",
+                justifyContent: "center",
                 padding: 1.5,
               }}
             >
@@ -266,8 +373,10 @@ export default function Home() {
                     backgroundColor:
                       action.charAt(0) === "+"
                         ? getBallColor(parseInt(action.charAt(1)))
-                        : "#e1811f",
-                    color: "#00000",
+                        : "#ffffff",
+                    color: action.charAt(0) === "+" ? "#ffffff" : "red",
+                    border:
+                      action.charAt(0) === "+" ? "none" : "2px dashed red",
                     textAlign: "center",
                     borderRadius: "50%",
                     margin: 0.25,
@@ -277,7 +386,6 @@ export default function Home() {
                 >
                   <Typography
                     fontSize={12}
-                    color="white"
                     fontStyle="italic"
                     fontWeight="bold"
                   >
@@ -292,6 +400,11 @@ export default function Home() {
         <Grid
           item
           xs={6}
+          onMouseDown={() => handleLongPressStart(secondPlayerData.name)}
+          onMouseUp={handleLongPressEnd}
+          onMouseLeave={handleLongPressEnd} // To handle cases where the mouse leaves the element before releasing
+          onTouchStart={() => handleLongPressStart(secondPlayerData.name)}
+          onTouchEnd={handleLongPressEnd}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -317,9 +430,53 @@ export default function Home() {
                 cursor: "pointer",
               }}
             />
-            <Typography variant="h6" fontWeight="bold">
-              {secondPlayerData.name}
-            </Typography>
+            <TextField
+              inputRef={secondPlayerInputRef}
+              disabled={!isEditingSecondPlayer}
+              onBlur={() => {
+                setIsEditingSecondPlayer(false);
+                localStorage.setItem(
+                  "secondPlayerData",
+                  JSON.stringify(secondPlayerData)
+                );
+              }}
+              value={secondPlayerData.name}
+              onChange={(e) =>
+                setSecondPlayerData({
+                  ...secondPlayerData,
+                  name: e.target.value,
+                })
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setIsEditingSecondPlayer(false);
+                  localStorage.setItem(
+                    "secondPlayerData",
+                    JSON.stringify(secondPlayerData)
+                  );
+                }
+              }}
+              variant="standard"
+              InputProps={{
+                disableUnderline: true,
+                sx: {
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  "& input": {
+                    textAlign: "center",
+                  },
+                },
+              }}
+              sx={{
+                width: "fit-content",
+                "& .MuiInput-root:before, & .MuiInput-root:after": {
+                  display: "none",
+                },
+                "& .MuiInput-root:hover:not(.Mui-disabled):before": {
+                  borderBottom: "none",
+                },
+              }}
+            />
             <Typography
               fontWeight="bold"
               sx={{ fontSize: "5rem", color: "#ea3a3a" }}
@@ -334,6 +491,7 @@ export default function Home() {
               container
               sx={{
                 display: "flex",
+                justifyContent: "center",
                 padding: 1.5,
               }}
             >
@@ -349,16 +507,19 @@ export default function Home() {
                     backgroundColor:
                       action.charAt(0) === "+"
                         ? getBallColor(parseInt(action.charAt(1)))
-                        : "#e1811f",
-                    color: "#00000",
+                        : "#ffffff",
+                    color: action.charAt(0) === "+" ? "#ffffff" : "red",
+                    border:
+                      action.charAt(0) === "+" ? "none" : "2px dashed red",
                     textAlign: "center",
                     borderRadius: "50%",
                     margin: 0.25,
+                    boxShadow:
+                      "rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px",
                   }}
                 >
                   <Typography
                     fontSize={12}
-                    color="white"
                     fontStyle="italic"
                     fontWeight="bold"
                   >
@@ -371,13 +532,7 @@ export default function Home() {
         </Grid>
       </Grid>
       {/* score balls */}
-      <Grid
-        container
-        spacing={2}
-        display="flex"
-        justifyContent="center"
-        alignItems="flex-end"
-      >
+      <Grid container spacing={2} display="flex" justifyContent="center">
         {[1, 2, 3, 4, 5, 6, 7].map((value) => (
           <Grid item xs={3} key={value}>
             <Box
@@ -429,20 +584,21 @@ export default function Home() {
               width: 48,
               height: 48,
               borderRadius: "50%",
-              backgroundColor: "#e1811f",
+              backgroundColor: "#ffffff",
+              border: "3px dashed red",
               boxShadow:
                 selectedPlayer === firstPlayerData.name
                   ? "rgba(71, 88, 214, 0.4) -5px 5px, rgba(71, 88, 214, 0.3) -10px 10px"
                   : selectedPlayer === secondPlayerData.name
                   ? "rgba(234, 58, 58, 0.4) 5px 5px, rgba(234, 58, 58, 0.3) 10px 10px"
-                  : "rgba(0, 0, 0, 0.1) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.01) 0px 4px 2px, rgba(0, 0, 0, 0.2) 0px 8px 4px, rgba(0, 0, 0, 0.01) 0px 16px 8px, rgba(0, 0, 0, 0.08) 0px 32px 16px",
+                  : "rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.01) 0px 4px 2px, rgba(0, 0, 0, 0.2) 0px 8px 4px, rgba(0, 0, 0, 0.01) 0px 16px 8px, rgba(0, 0, 0, 0.08) 0px 32px 16px",
               cursor: "pointer",
             }}
             onClick={handleFoul}
           >
             <Typography
               fontWeight="bold"
-              sx={{ fontSize: "1rem", color: "white" }}
+              sx={{ fontSize: "1rem", color: "red" }}
             >
               Foul
             </Typography>
