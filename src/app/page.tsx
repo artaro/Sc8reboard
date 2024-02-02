@@ -50,7 +50,6 @@ export default function Home() {
 
     const firstPlayerDataSaved = localStorage.getItem("firstPlayerData");
 
-    console.log("🚀 🔸 firstPlayerDataSaved:", firstPlayerDataSaved);
     if (firstPlayerDataSaved) {
       setFirstPlayerData(JSON.parse(firstPlayerDataSaved));
     }
@@ -130,13 +129,12 @@ export default function Home() {
   };
 
   function handlePlayerSelection(player: string) {
-    if (!longPressTriggeredRef.current) {
-      // Only proceed if it was not a long press
+    
       if(selectedPlayer){
         setSelectedPlayer(null)
       }
 setSelectedPlayer(player);
-    }
+    
   }
 
   function handleScoreChange(value: number) {
@@ -269,11 +267,6 @@ setSelectedPlayer(player);
         <Grid
           item
           xs={6}
-          onMouseDown={() => handleLongPressStart(firstPlayerData.name)}
-          onMouseUp={handleLongPressEnd}
-          onMouseLeave={handleLongPressEnd} // To handle cases where the mouse leaves the element before releasing
-          onTouchStart={() => handleLongPressStart(firstPlayerData.name)}
-          onTouchEnd={handleLongPressEnd}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -300,9 +293,17 @@ setSelectedPlayer(player);
                 cursor: "pointer",
               }}
             />
+            <Box
+onMouseDown={() => handleLongPressStart(firstPlayerData.name)}
+          onMouseUp={handleLongPressEnd}
+          onMouseLeave={handleLongPressEnd} // To handle cases where the mouse leaves the element before releasing
+          onTouchStart={() => handleLongPressStart(firstPlayerData.name)}
+          onTouchEnd={handleLongPressEnd}
+>
             <TextField
               inputRef={firstPlayerInputRef}
               disabled={!isEditingFirstPlayer}
+              onFocus={()=>setSelectedPlayer(null)}
               onBlur={() => {
                 setIsEditingFirstPlayer(false);
                 // save to local storage
@@ -346,6 +347,7 @@ setSelectedPlayer(player);
                 },
               }}
             />
+            </Box>
             <Typography
               fontWeight="bold"
               sx={{ fontSize: "5rem", color: "#4758d6" }}
@@ -433,9 +435,17 @@ setSelectedPlayer(player);
                 cursor: "pointer",
               }}
             />
+<Box
+onMouseDown={() => handleLongPressStart(secondPlayerData.name)}
+          onMouseUp={handleLongPressEnd}
+          onMouseLeave={handleLongPressEnd} // To handle cases where the mouse leaves the element before releasing
+          onTouchStart={() => handleLongPressStart(secondPlayerData.name)}
+          onTouchEnd={handleLongPressEnd}
+>
             <TextField
               inputRef={secondPlayerInputRef}
               disabled={!isEditingSecondPlayer}
+onFocus={()=> setSelectedPlayer(null)}
               onBlur={() => {
                 setIsEditingSecondPlayer(false);
                 localStorage.setItem(
@@ -479,7 +489,7 @@ setSelectedPlayer(player);
                   borderBottom: "none",
                 },
               }}
-            />
+            /></Box>
             <Typography
               fontWeight="bold"
               sx={{ fontSize: "5rem", color: "#ea3a3a" }}
