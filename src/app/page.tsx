@@ -256,6 +256,7 @@ export default function Home() {
             >
               {firstPlayerHistory.map((action: any, index: number) => (
                 <Box
+                  key={index}
                   sx={{
                     width: 30,
                     height: 30,
@@ -338,6 +339,7 @@ export default function Home() {
             >
               {secondPlayerHistory.map((action: any, index: number) => (
                 <Box
+                  key={index}
                   sx={{
                     width: 30,
                     height: 30,
