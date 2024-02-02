@@ -132,7 +132,10 @@ export default function Home() {
   function handlePlayerSelection(player: string) {
     if (!longPressTriggeredRef.current) {
       // Only proceed if it was not a long press
-      setSelectedPlayer(player);
+      if(selectedPlayer){
+        setSelectedPlayer(null)
+      }
+setSelectedPlayer(player);
     }
   }
 
