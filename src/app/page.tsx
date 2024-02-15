@@ -264,7 +264,7 @@ export default function Home() {
           </Box>
         ))}
       </Stack>
-      {setting.player[0].frameWon || setting.player[0].frameWon ? (
+      {setting.player[0]?.frameWon || setting.player[1]?.frameWon ? (
         <Stack
           spacing={1}
           alignItems="center"
