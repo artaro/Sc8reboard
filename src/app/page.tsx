@@ -17,7 +17,13 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { IHistory, IPlayer, useSetting } from "@/hooks/useSetting";
+import SettingsIcon from "@mui/icons-material/Settings";
+import {
+  defaultPlayerValue,
+  IHistory,
+  IPlayer,
+  useSetting,
+} from "@/hooks/useSetting";
 import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
@@ -25,6 +31,7 @@ export default function Home() {
 
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
 
+  const [openSettingDialog, setOpenSettingDialog] = useState<boolean>(false);
   const [openScoreDialog, setOpenScoreDialog] = useState<boolean>(false);
   const [openFoulDialog, setOpenFoulDialog] = useState<boolean>(false);
   const [openEndFrameDialog, setOpenEndFrameDialog] = useState<boolean>(false);
@@ -79,6 +86,13 @@ export default function Home() {
     setOpenEndFrameDialog(true);
   };
 
+  const handleCloseSettingDialog = () => {
+    setOpenSettingDialog(false);
+  };
+  const handleOpenSettingDialog = () => {
+    setOpenSettingDialog(true);
+  };
+
   const handleConfirmScore = (playerId: string) => {
     if (!selectedScore) return;
 
@@ -94,6 +108,7 @@ export default function Home() {
 
     player.score = player.score + selectedScore;
     player.history.push(newHistory);
+    localStorage.setItem("player", JSON.stringify(setting.player));
     handleCloseScoreDialog();
   };
 
@@ -110,6 +125,7 @@ export default function Home() {
 
     player.score = player.score - 4;
     player.history.push(newHistory);
+    localStorage.setItem("player", JSON.stringify(setting.player));
     handleCloseFoulDialog();
   };
 
@@ -126,23 +142,34 @@ export default function Home() {
 
     setting.setPlayer(
       setting.player.map((player) => {
+        player.frame?.push({
+          id: uuidv4(),
+          isWinner: winner === player.id,
+        });
+        if (player.id === winner && player.score > 0) {
+          player.frameWon = player.frameWon + 1;
+        }
         player.score = 0;
         player.history = [];
-        player.frame = player.history.map((history) => {
-          return {
-            id: uuidv4(),
-            history: history,
-            isWinner: winner === player.id,
-          };
-        });
-        player.frameWon =
-          winner === player.id ? player.frameWon + 1 : player.frameWon;
-
         return player;
       })
     );
 
+    localStorage.setItem("player", JSON.stringify(setting.player));
     handleCloseEndFrameDialog();
+  };
+
+  const handleResetFrameWon = () => {
+    setting.setPlayer(
+      setting.player.map((player) => {
+        player.frameWon = 0;
+        return player;
+      })
+    );
+
+    localStorage.setItem("player", JSON.stringify(setting.player));
+
+    handleCloseSettingDialog();
   };
 
   return (
@@ -158,6 +185,19 @@ export default function Home() {
         boxSizing: "border-box",
       }}
     >
+      <SettingsIcon
+        onClick={handleOpenSettingDialog}
+        sx={{
+          width: 32,
+          height: 32,
+          position: "absolute",
+          top: 18,
+          right: 18,
+          color: "gray",
+          cursor: "pointer",
+        }}
+      />
+
       <Stack
         direction="row"
         sx={{
@@ -224,9 +264,30 @@ export default function Home() {
           </Box>
         ))}
       </Stack>
-
+      <Stack
+        spacing={1}
+        alignItems="center"
+        justifyContent="center"
+        direction="row"
+      >
+        <Typography fontWeight="bold">{setting.player[0].frameWon}</Typography>
+        <Typography> frame(s)</Typography>
+        <Typography fontWeight="bold">{setting.player[1].frameWon}</Typography>
+      </Stack>
+      {setting.leadScore !== 0 ? (
+        <Stack
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          direction="row"
+        >
+          <Typography fontWeight="bold">{setting.leadName}</Typography>
+          <Typography> is leading with</Typography>
+          <Typography fontWeight="bold">{setting.leadScore}</Typography>
+          <Typography> points</Typography>
+        </Stack>
+      ) : null}
       {/* score balls */}
-
       <Grid container spacing={2} display="flex" justifyContent="center">
         {[1, 2, 3, 4, 5, 6, 7].map((value) => (
           <Grid item xs={3} key={value}>
@@ -422,6 +483,29 @@ export default function Home() {
           <Button onClick={handleConfirmEndFrame} autoFocus>
             ตกลง
           </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openSettingDialog}
+        onClose={handleCloseSettingDialog}
+        aria-labelledby="end-frame-dialog-title"
+        sx={{
+          "& .MuiDialog-paper": {
+            width: "100%",
+            maxWidth: { xs: 300, sm: 400 },
+          },
+        }}
+      >
+        <DialogTitle id="end-frame-dialog-title">Options</DialogTitle>
+        <DialogContent dividers>
+          <Stack justifyContent="center" alignItems="center">
+            <Button variant="outlined" onClick={handleResetFrameWon}>
+              Reset Frame Won
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSettingDialog}>ยกเลิก</Button>
         </DialogActions>
       </Dialog>
     </Stack>

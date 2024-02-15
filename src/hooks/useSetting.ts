@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isEmpty } from 'lodash'
 
 export interface IHistory {
     id: string;
@@ -8,7 +9,6 @@ export interface IHistory {
 
 export interface IFrame {
     id: string;
-    history: IHistory;
     isWinner: boolean;
 }
 export interface IPlayer {
@@ -45,8 +45,79 @@ type settingProps = {
 }
 
 export const useSetting = (props?: settingProps) => {
-    const [player, setPlayer] = useState<IPlayer[]>(props?.player || defaultPlayerValue);
+
+    const [player, setPlayer] = useState<IPlayer[]>(props?.player || []);
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(props?.selectedPlayer || null);
+
+    useEffect(() => {
+        const storedPlayer = localStorage.getItem("player");
+
+        console.log("🚀 🔸 storedPlayer:", storedPlayer)
+        if (storedPlayer) {
+            console.log('1x')
+            setPlayer(JSON.parse(storedPlayer));
+        } else {
+            console.log(1)
+
+            setPlayer(defaultPlayerValue);
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isEmpty(player)) {
+            localStorage.setItem("player", JSON.stringify(player));
+        }
+    }, [player]);
+
+    const getLeadingScore = (): { id: string | null; name: string | null; lead_score: number } => {
+        if (isEmpty(player)) return { id: null, name: null, lead_score: 0 };
+
+        let leadingPlayerIndex = 0;
+        let lowestPlayerIndex = 0;
+
+        for (let i = 1; i < player.length; i++) {
+            if (player[i].score > player[leadingPlayerIndex].score) {
+                leadingPlayerIndex = i;
+            } else if (player[i].score < player[lowestPlayerIndex].score) {
+                lowestPlayerIndex = i;
+            }
+        }
+
+        const leadScore = player[leadingPlayerIndex].score - player[lowestPlayerIndex].score;
+
+        if (leadScore === 0) return { id: null, name: null, lead_score: 0 };
+
+        return { id: player[leadingPlayerIndex].id, name: player[leadingPlayerIndex].name, lead_score: leadScore };
+    };
+
+
+
+    const getLeadingFrameWon = (): { id: string | null; name: string | null; lead_frame: number } => {
+
+        if (isEmpty(player)) return { id: null, name: null, lead_frame: 0 };
+
+        let leadingPlayerIndex = 0;
+        let lowestPlayerIndex = 0;
+
+        for (let i = 1; i < player.length; i++) {
+            if (player[i].frameWon > player[leadingPlayerIndex].frameWon) {
+                leadingPlayerIndex = i;
+            } else if (player[i].frameWon < player[lowestPlayerIndex].frameWon) {
+                lowestPlayerIndex = i;
+            }
+        }
+
+        const leadFrame = player[leadingPlayerIndex].frameWon - player[lowestPlayerIndex].frameWon;
+
+        if (leadFrame === 0) return { id: null, name: null, lead_frame: 0 };
+
+        return { id: player[leadingPlayerIndex].id, name: player[leadingPlayerIndex].name, lead_frame: leadFrame };
+    };
+
+    const { id: leadId, name: leadName, lead_score: leadScore } = getLeadingScore();
+
+    const { id: leadFrameId, name: leadFrameName, lead_frame: leadFrame } = getLeadingFrameWon();
+
 
 
     return {
@@ -54,5 +125,11 @@ export const useSetting = (props?: settingProps) => {
         setPlayer,
         selectedPlayer,
         setSelectedPlayer,
+        leadId,
+        leadName,
+        leadScore,
+        leadFrameId,
+        leadFrameName,
+        leadFrame,
     }
 }
