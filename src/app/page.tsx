@@ -264,16 +264,22 @@ export default function Home() {
           </Box>
         ))}
       </Stack>
-      <Stack
-        spacing={1}
-        alignItems="center"
-        justifyContent="center"
-        direction="row"
-      >
-        <Typography fontWeight="bold">{setting.player[0].frameWon}</Typography>
-        <Typography> frame(s)</Typography>
-        <Typography fontWeight="bold">{setting.player[1].frameWon}</Typography>
-      </Stack>
+      {setting.player[0].frameWon || setting.player[0].frameWon ? (
+        <Stack
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          direction="row"
+        >
+          <Typography fontWeight="bold">
+            {setting.player[0].frameWon}
+          </Typography>
+          <Typography> frame(s)</Typography>
+          <Typography fontWeight="bold">
+            {setting.player[1].frameWon}
+          </Typography>
+        </Stack>
+      ) : null}
       {setting.leadScore !== 0 ? (
         <Stack
           spacing={1}
