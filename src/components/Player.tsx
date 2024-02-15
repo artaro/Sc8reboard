@@ -1,17 +1,23 @@
 import { Avatar, Box, Grid, Stack, TextField, Typography } from "@mui/material";
-
+export const FIRST_COLOR = "#4758d6";
+export const SECOND_COLOR = "#ea3a3a";
 const Player = ({
   id,
   name,
   score,
-}: {
+  hideScore = false,
+  hideName = false,
+  onNameChange = () => {},
+}: // onScoreChange,
+{
   id: number;
-  name: string;
-  score: number;
+  name?: string;
+  score?: number;
+  hideScore?: boolean;
+  hideName?: boolean;
+  onNameChange?: (value: string) => void;
+  // onScoreChange: (value: number) => void;
 }) => {
-  const firstColor = "#4758d6";
-  const secondColor = "#ea3a3a";
-
   const boxShadows = [
     {
       id: 1,
@@ -36,37 +42,41 @@ const Player = ({
         <Avatar
           alt={name}
           sx={{
-            backgroundColor: id === 0 ? firstColor : secondColor,
+            backgroundColor: id === 0 ? FIRST_COLOR : SECOND_COLOR,
             width: { xs: 80, sm: 100, md: 120 },
             height: { xs: 80, sm: 100, md: 120 },
             cursor: "pointer",
           }}
         />
-        <TextField
-          value={name}
-          onChange={() => {}}
-          variant="standard"
-          InputProps={{
-            disableUnderline: true,
-            sx: {
-              fontSize: "2rem",
-              fontWeight: "bold",
-              "& input": {
-                textAlign: "center",
+        {!hideName ? (
+          <TextField
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            variant="standard"
+            InputProps={{
+              disableUnderline: true,
+              sx: {
+                fontSize: "2rem",
+                fontWeight: "bold",
+                "& input": {
+                  textAlign: "center",
+                },
               },
-            },
-          }}
-          sx={NAME_SX}
-        />
-        <Box>
-          <Typography
-            fontWeight="bold"
-            fontSize="5rem"
-            color={id === 0 ? firstColor : secondColor}
-          >
-            {score}
-          </Typography>
-        </Box>
+            }}
+            sx={NAME_SX}
+          />
+        ) : null}
+        {!hideScore ? (
+          <Box>
+            <Typography
+              fontWeight="bold"
+              fontSize="5rem"
+              color={id === 0 ? FIRST_COLOR : SECOND_COLOR}
+            >
+              {score}
+            </Typography>
+          </Box>
+        ) : null}
       </Stack>
     </Grid>
   );
