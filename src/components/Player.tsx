@@ -43,8 +43,8 @@ const Player = ({
           alt={name}
           sx={{
             backgroundColor: id === 0 ? FIRST_COLOR : SECOND_COLOR,
-            width: { xs: 80, sm: 100, md: 120 },
-            height: { xs: 80, sm: 100, md: 120 },
+            width: { xs: 60, sm: 100, md: 120 },
+            height: { xs: 60, sm: 100, md: 120 },
             cursor: "pointer",
           }}
         />
@@ -60,10 +60,11 @@ const Player = ({
                 fontWeight: "bold",
                 "& input": {
                   textAlign: "center",
+                  padding: "0 !important",
                 },
               },
             }}
-            sx={NAME_SX}
+            sx={{ ...NAME_SX }}
           />
         ) : null}
         {!hideScore ? (

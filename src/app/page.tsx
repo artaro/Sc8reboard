@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Player, { FIRST_COLOR, SECOND_COLOR } from "@/components/Player";
 import {
-  Avatar,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,19 +12,12 @@ import {
   DialogTitle,
   Grid,
   Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
-import {
-  defaultPlayerValue,
-  IHistory,
-  IPlayer,
-  useSetting,
-} from "@/hooks/useSetting";
+import { IHistory, IPlayer, useSetting } from "@/hooks/useSetting";
 import { v4 as uuidv4 } from "uuid";
+import { isEmpty } from "lodash";
 
 export default function Home() {
   const setting = useSetting();
@@ -180,8 +173,9 @@ export default function Home() {
       sx={{
         width: "100vw",
         height: "100vh",
-        overflow: "auto",
-        padding: 3,
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: "0 24px 24px 24px",
         boxSizing: "border-box",
       }}
     >
@@ -202,67 +196,84 @@ export default function Home() {
         direction="row"
         sx={{
           height: "auto",
-          flexGrow: 1,
+          flexGrow: 0.5,
           padding: 2,
         }}
       >
-        {setting.player.map((player: IPlayer, index: number) => (
-          <Box key={index}>
-            <Player
-              id={index}
-              name={player.name}
-              score={player.score}
-              onNameChange={(value) => {
-                handleChangeName(value, index);
-              }}
-            />
-            <Stack justifyContent="center" alignItems="center">
-              <Typography fontStyle="italic" fontWeight="bold">
-                History
-              </Typography>
-            </Stack>
-            <Grid
-              container
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                padding: 1.5,
-              }}
-            >
-              {player.history.map((item: IHistory) => (
-                <Grid
-                  key={item.id}
-                  sx={{
-                    width: 30,
-                    height: 30,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: getBallColor(
-                      item.type === "score" ? item.value : null
-                    ),
-                    color: item.type === "score" ? "white" : "red",
-                    border: item.type === "score" ? "none" : "2px dashed red",
-                    textAlign: "center",
-                    borderRadius: "50%",
-                    margin: 0.25,
-                    boxShadow:
-                      "rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px",
-                  }}
-                >
-                  <Typography
-                    fontSize={12}
-                    fontStyle="italic"
-                    fontWeight="bold"
+        {setting.player.length > 0 ? (
+          setting.player.map((player: IPlayer, index: number) => (
+            <Box key={index}>
+              <Player
+                id={index}
+                name={player.name}
+                score={player.score}
+                onNameChange={(value) => {
+                  handleChangeName(value, index);
+                }}
+              />
+              <Stack justifyContent="center" alignItems="center">
+                <Typography fontStyle="italic" fontWeight="bold">
+                  History
+                </Typography>
+              </Stack>
+              <Grid
+                container
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: 1.5,
+                }}
+              >
+                {player.history.map((item: IHistory) => (
+                  <Grid
+                    key={item.id}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: getBallColor(
+                        item.type === "score" ? item.value : null
+                      ),
+                      color: item.type === "score" ? "white" : "red",
+                      border: item.type === "score" ? "none" : "2px dashed red",
+                      textAlign: "center",
+                      borderRadius: "50%",
+                      margin: 0.25,
+                      boxShadow:
+                        "rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px",
+                    }}
                   >
-                    {item.type === "score" ? "+" : "-"}
-                    {item.value}
-                  </Typography>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        ))}
+                    <Typography
+                      fontSize={12}
+                      fontStyle="italic"
+                      fontWeight="bold"
+                    >
+                      {item.type === "score" ? "+" : "-"}
+                      {item.value}
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ))
+        ) : (
+          <Stack
+            direction="row"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            sx={{
+              height: "auto",
+              flexGrow: 1,
+              padding: 2,
+            }}
+            spacing={2}
+          >
+            <CircularProgress />
+          </Stack>
+        )}
       </Stack>
       {setting.player[0]?.frameWon || setting.player[1]?.frameWon ? (
         <Stack
@@ -271,11 +282,11 @@ export default function Home() {
           justifyContent="center"
           direction="row"
         >
-          <Typography fontWeight="bold">
+          <Typography fontWeight="bold" fontSize={14} color={FIRST_COLOR}>
             {setting.player[0].frameWon}
           </Typography>
-          <Typography> frame(s)</Typography>
-          <Typography fontWeight="bold">
+          <Typography fontSize={14}> Frame Won</Typography>
+          <Typography fontWeight="bold" fontSize={14} color={SECOND_COLOR}>
             {setting.player[1].frameWon}
           </Typography>
         </Stack>
@@ -287,16 +298,56 @@ export default function Home() {
           justifyContent="center"
           direction="row"
         >
-          <Typography fontWeight="bold">{setting.leadName}</Typography>
-          <Typography> is leading with</Typography>
-          <Typography fontWeight="bold">{setting.leadScore}</Typography>
-          <Typography> points</Typography>
+          <Typography
+            fontWeight="bold"
+            fontSize={14}
+            color={
+              setting.leadId === setting.player[0].id
+                ? FIRST_COLOR
+                : SECOND_COLOR
+            }
+          >
+            {setting.leadName}
+          </Typography>
+          <Typography fontSize={14}> is leading with</Typography>
+          <Typography
+            fontWeight="bold"
+            fontSize={14}
+            color={
+              setting.leadId === setting.player[0].id
+                ? FIRST_COLOR
+                : SECOND_COLOR
+            }
+          >
+            {setting.leadScore}
+          </Typography>
+          <Typography fontSize={14}> points</Typography>
+        </Stack>
+      ) : (setting.leadScore === 0 && !isEmpty(setting.player[0]?.history)) ||
+        !isEmpty(setting.player[1]?.history) ? (
+        <Stack
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          direction="row"
+        >
+          <Typography fontWeight="bold" fontSize={14}>
+            Score is tied
+          </Typography>
         </Stack>
       ) : null}
       {/* score balls */}
-      <Grid container spacing={2} display="flex" justifyContent="center">
+      <Grid container display="flex" justifyContent="center">
         {[1, 2, 3, 4, 5, 6, 7].map((value) => (
-          <Grid item xs={3} key={value}>
+          <Grid
+            item
+            xs={3}
+            key={value}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            padding={1}
+          >
             <Box
               display="flex"
               justifyContent="center"
@@ -330,7 +381,14 @@ export default function Home() {
           </Grid>
         ))}
         {/* Foul Ball */}
-        <Grid item xs={3}>
+        <Grid
+          item
+          xs={3}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          padding={1}
+        >
           <Box
             display="flex"
             justifyContent="center"

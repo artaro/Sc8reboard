@@ -52,13 +52,9 @@ export const useSetting = (props?: settingProps) => {
     useEffect(() => {
         const storedPlayer = localStorage.getItem("player");
 
-        console.log("🚀 🔸 storedPlayer:", storedPlayer)
         if (storedPlayer) {
-            console.log('1x')
             setPlayer(JSON.parse(storedPlayer));
         } else {
-            console.log(1)
-
             setPlayer(defaultPlayerValue);
         }
     }, [])
