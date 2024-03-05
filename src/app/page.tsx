@@ -128,7 +128,14 @@ export default function Home() {
     const player = setting.player.find((player) => player.id === playerId);
 
     if (!player) return;
-
+    const latestHistory = player.history[player.history.length - 1]
+    const {value,type} = latestHistory
+    
+    if(type==='foul') {
+      player.score = player.score + 4;
+    } else {
+      player.score = player.score + value
+    }
     player.history.pop()
     localStorage.setItem('player', JSON.stringify(setting.player))
   }
