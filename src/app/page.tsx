@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
+import HistoryIcon from '@mui/icons-material/History';
 import { IHistory, IPlayer, useSetting } from "@/hooks/useSetting";
 import { v4 as uuidv4 } from "uuid";
 import { isEmpty } from "lodash";
@@ -122,6 +123,16 @@ export default function Home() {
     handleCloseFoulDialog();
   };
 
+  const handleUndoHistory = (playerId: string) => {
+
+    const player = setting.player.find((player) => player.id === playerId);
+
+    if (!player) return;
+
+    player.history.pop()
+    localStorage.setItem('player', JSON.stringify(setting.player))
+  }
+
   const handleConfirmEndFrame = () => {
     //collect each player score
     let winner: string = "";
@@ -211,10 +222,13 @@ export default function Home() {
                   handleChangeName(value, index);
                 }}
               />
-              <Stack justifyContent="center" alignItems="center">
+              <Stack justifyContent="center" alignItems="center" spacing={1}>
                 <Typography fontStyle="italic" fontWeight="bold">
                   History
                 </Typography>
+                {player.history.length > 0 && (
+                  <HistoryIcon onClick={handleUndoHistory(player.id)} />
+                )}
               </Stack>
               <Grid
                 container
