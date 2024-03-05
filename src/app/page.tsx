@@ -227,7 +227,7 @@ export default function Home() {
                   History
                 </Typography>
                 {player.history.length > 0 && (
-                  <HistoryIcon onClick={()=> handleUndoHistory(player.id)} color='gray' />
+                  <HistoryIcon onClick={()=> handleUndoHistory(player.id)} color='action' />
                 )}
               </Stack>
               <Grid
