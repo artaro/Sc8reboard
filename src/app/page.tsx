@@ -123,25 +123,31 @@ export default function Home() {
     handleCloseFoulDialog();
   };
 
-  const handleUndoHistory = (playerId: string) => {
-    const updatedPlayers = setting.player.map((player) => {
-        if (player.id === playerId && player.history.length > 0) {
-            const latestHistory = player.history[player.history.length - 1];
-            const { value, type } = latestHistory;
+const handleUndoHistory = (playerId: string) => {
+  const updatedPlayers = setting.player.map((player) => {
+      if (player.id === playerId && player.history.length > 0) {
+          const latestHistory = player.history[player.history.length - 1];
+          const { value, type } = latestHistory;
 
-            if (type === 'foul') {
-                player.score = player.score + 4;
-            } else {
-                player.score = player.score - value;
-            }
-            player.history.pop();
-        }
-        return player;
-    });
+          const updatedPlayer = { ...player }; // Create a copy of the player object
 
-    localStorage.setItem('player', JSON.stringify(updatedPlayers));
-}
+          if (type === 'foul') {
+              updatedPlayer.score = updatedPlayer.score + 4;
+          } else {
+              updatedPlayer.score = updatedPlayer.score - value;
+          }
 
+          updatedPlayer.history = [...updatedPlayer.history]; // Create a copy of the history array
+          updatedPlayer.history.pop(); // Remove the last history item
+
+          return updatedPlayer; // Return the updated player object
+      }
+      return player; // Return the unchanged player object if not the one to update
+  });
+
+  setting.setPlayer(updatedPlayers); // Update the state with the new array of players
+  localStorage.setItem('player', JSON.stringify(setting.player))
+};
 
   const handleConfirmEndFrame = () => {
     //collect each player score
