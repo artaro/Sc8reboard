@@ -124,21 +124,24 @@ export default function Home() {
   };
 
   const handleUndoHistory = (playerId: string) => {
+    const updatedPlayers = setting.player.map((player) => {
+        if (player.id === playerId && player.history.length > 0) {
+            const latestHistory = player.history[player.history.length - 1];
+            const { value, type } = latestHistory;
 
-    const player = setting.player.find((player) => player.id === playerId);
+            if (type === 'foul') {
+                player.score = player.score + 4;
+            } else {
+                player.score = player.score - value;
+            }
+            player.history.pop();
+        }
+        return player;
+    });
 
-    if (!player) return;
-    const latestHistory = player.history[player.history.length - 1]
-    const {value,type} = latestHistory
-    
-    if(type==='foul') {
-      player.score = player.score + 4;
-    } else {
-      player.score = player.score + value
-    }
-    player.history.pop()
-    localStorage.setItem('player', JSON.stringify(setting.player))
-  }
+    localStorage.setItem('player', JSON.stringify(updatedPlayers));
+}
+
 
   const handleConfirmEndFrame = () => {
     //collect each player score
