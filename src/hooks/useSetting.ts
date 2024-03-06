@@ -17,7 +17,7 @@ export interface IPlayer {
     score: number;
     history: IHistory[];
     frame?: IFrame[];
-    frameWon: number
+    frameWins: number
 }
 
 export const defaultPlayerValue = [
@@ -26,14 +26,14 @@ export const defaultPlayerValue = [
         name: 'Player 1',
         score: 0,
         history: [],
-        frameWon: 0
+        frameWins: 0
     },
     {
         id: '233978c8-fb30-4340-b7c4-f594d8e332ca',
         name: 'Player 2',
         score: 0,
         history: [],
-        frameWon: 0
+        frameWins: 0
     }
 ]
 
@@ -96,14 +96,14 @@ export const useSetting = (props?: settingProps) => {
         let lowestPlayerIndex = 0;
 
         for (let i = 1; i < player.length; i++) {
-            if (player[i].frameWon > player[leadingPlayerIndex].frameWon) {
+            if (player[i].frameWins > player[leadingPlayerIndex].frameWins) {
                 leadingPlayerIndex = i;
-            } else if (player[i].frameWon < player[lowestPlayerIndex].frameWon) {
+            } else if (player[i].frameWins < player[lowestPlayerIndex].frameWins) {
                 lowestPlayerIndex = i;
             }
         }
 
-        const leadFrame = player[leadingPlayerIndex].frameWon - player[lowestPlayerIndex].frameWon;
+        const leadFrame = player[leadingPlayerIndex].frameWins - player[lowestPlayerIndex].frameWins;
 
         if (leadFrame === 0) return { id: null, name: null, lead_frame: 0 };
 

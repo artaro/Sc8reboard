@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from "@mui/icons-material/History";
 import { IHistory, IPlayer, useSetting } from "@/hooks/useSetting";
 import { v4 as uuidv4 } from "uuid";
 import { isEmpty } from "lodash";
@@ -123,31 +123,31 @@ export default function Home() {
     handleCloseFoulDialog();
   };
 
-const handleUndoHistory = (playerId: string) => {
-  const updatedPlayers = setting.player.map((player) => {
+  const handleUndoHistory = (playerId: string) => {
+    const updatedPlayers = setting.player.map((player) => {
       if (player.id === playerId && player.history.length > 0) {
-          const latestHistory = player.history[player.history.length - 1];
-          const { value, type } = latestHistory;
+        const latestHistory = player.history[player.history.length - 1];
+        const { value, type } = latestHistory;
 
-          const updatedPlayer = { ...player }; // Create a copy of the player object
+        const updatedPlayer = { ...player }; // Create a copy of the player object
 
-          if (type === 'foul') {
-              updatedPlayer.score = updatedPlayer.score + 4;
-          } else {
-              updatedPlayer.score = updatedPlayer.score - value;
-          }
+        if (type === "foul") {
+          updatedPlayer.score = updatedPlayer.score + 4;
+        } else {
+          updatedPlayer.score = updatedPlayer.score - value;
+        }
 
-          updatedPlayer.history = [...updatedPlayer.history]; // Create a copy of the history array
-          updatedPlayer.history.pop(); // Remove the last history item
+        updatedPlayer.history = [...updatedPlayer.history]; // Create a copy of the history array
+        updatedPlayer.history.pop(); // Remove the last history item
 
-          return updatedPlayer; // Return the updated player object
+        return updatedPlayer; // Return the updated player object
       }
       return player; // Return the unchanged player object if not the one to update
-  });
+    });
 
-  setting.setPlayer(updatedPlayers); // Update the state with the new array of players
-  localStorage.setItem('player', JSON.stringify(setting.player))
-};
+    setting.setPlayer(updatedPlayers); // Update the state with the new array of players
+    localStorage.setItem("player", JSON.stringify(setting.player));
+  };
 
   const handleConfirmEndFrame = () => {
     //collect each player score
@@ -167,7 +167,7 @@ const handleUndoHistory = (playerId: string) => {
           isWinner: winner === player.id,
         });
         if (player.id === winner && player.score > 0) {
-          player.frameWon = player.frameWon + 1;
+          player.frameWins = player.frameWins + 1;
         }
         player.score = 0;
         player.history = [];
@@ -179,10 +179,10 @@ const handleUndoHistory = (playerId: string) => {
     handleCloseEndFrameDialog();
   };
 
-  const handleResetFrameWon = () => {
+  const handleResetFrameWins = () => {
     setting.setPlayer(
       setting.player.map((player) => {
-        player.frameWon = 0;
+        player.frameWins = 0;
         return player;
       })
     );
@@ -238,12 +238,20 @@ const handleUndoHistory = (playerId: string) => {
                   handleChangeName(value, index);
                 }}
               />
-              <Stack justifyContent="center" alignItems="center" spacing={1}>
+              <Stack
+                direction="row"
+                justifyContent="center"
+                alignItems="center"
+                spacing={1}
+              >
                 <Typography fontStyle="italic" fontWeight="bold">
                   History
                 </Typography>
                 {player.history.length > 0 && (
-                  <HistoryIcon onClick={()=> handleUndoHistory(player.id)} color='action' />
+                  <HistoryIcon
+                    onClick={() => handleUndoHistory(player.id)}
+                    color="action"
+                  />
                 )}
               </Stack>
               <Grid
@@ -305,7 +313,7 @@ const handleUndoHistory = (playerId: string) => {
           </Stack>
         )}
       </Stack>
-      {setting.player[0]?.frameWon || setting.player[1]?.frameWon ? (
+      {setting.player[0]?.frameWins || setting.player[1]?.frameWins ? (
         <Stack
           spacing={1}
           alignItems="center"
@@ -313,11 +321,11 @@ const handleUndoHistory = (playerId: string) => {
           direction="row"
         >
           <Typography fontWeight="bold" fontSize={14} color={FIRST_COLOR}>
-            {setting.player[0].frameWon}
+            {setting.player[0].frameWins}
           </Typography>
-          <Typography fontSize={14}> Frame Won</Typography>
+          <Typography fontSize={14}> Frame Wins</Typography>
           <Typography fontWeight="bold" fontSize={14} color={SECOND_COLOR}>
-            {setting.player[1].frameWon}
+            {setting.player[1].frameWins}
           </Typography>
         </Stack>
       ) : null}
@@ -593,8 +601,8 @@ const handleUndoHistory = (playerId: string) => {
         <DialogTitle id="end-frame-dialog-title">Options</DialogTitle>
         <DialogContent dividers>
           <Stack justifyContent="center" alignItems="center">
-            <Button variant="outlined" onClick={handleResetFrameWon}>
-              Reset Frame Won
+            <Button variant="outlined" onClick={handleResetFrameWins}>
+              Reset Frame Wins
             </Button>
           </Stack>
         </DialogContent>
